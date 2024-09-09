@@ -7,7 +7,7 @@ This repo contains the implementation of the [Neural Style Transfer](https://arx
 * **Neural_Style_Transfer_Metrics.ipynb :-** A notebook that contains the analysis of different metrics for stylized images.
 * **Private Style Transfer.ipynb :-** The notebook containing details about privacy-preserving image style transfer.
 
-We have created a FHE-compatible style transfer model from a pre-trained model using Concrete-ML. Concrete-ML uses TFHE encryption scheme internally.
+We have created a FHE-compatible style transfer model from a pre-trained model using Concrete-ML. Concrete-ML uses TFHE encryption scheme internally. To learn the details about the implementaion of privacy-preserving style transfer, please refer to the [Private Style Transfer](Private Style Transfer.ipynb) notebook.
 
 Pre-processing and post-processing steps - 
 * We normalize the content(input) image as a pre-processing step. Similarly, we have to denormalise the output(result) image to obtain the final stylized image. 
@@ -19,3 +19,12 @@ Few of the decisions taken to solve image style transfer problem within FHE/Conc
 * **Padding Changes:-** In the original paper, it is recommended to use reflection padding for better results. However, support for reflection padding is not present in Concrete ML. So, we used constant padding instead. Constant padding introduces an edge/border effect while working with convolutional layers. But, since we trained our network on tiny images, this effect was not evident.
 * **Normalization Changes:-** In the original paper, it is recommended to use Instance normalization for better results. However, support, for instance, normalization is not present in Concrete ML. So, we used Batch normalization instead.
 * **Upsampling changes:-** In the penultimate layer and the layer before that, we need to upsample the input before applying ConvBlock. However, native support for upsampling(interpolation or Resize operator in ONNX graph) is not present in Concrete ML. So, we had to add custom logic for upsampling(nearest neighbour interpolation) which can be compiled using Concrete ML.
+
+### Hack used to fix to some bug in Concrete ML/ONNX that can't infer size of `x` dynamically 
+While compiling a torch model using Concrete-ML, if we try to infer the shape of the input `x` and use it as a value, we encounter a weird issue. Somehow, after ONNX export of the model, the value of `x.shape` is not properly propagated. To fix this issue, we had to manually hard-code variables that use dimension of the input. We have done this for two layers of our model that require upsampling.Here is the code snippet that does the fix - 
+```
+if x.shape[1] == 32:
+    batch_size, channels, height, width = (1, 32, 8, 8)
+else:
+    batch_size, channels, height, width = (1, 16, 16, 16)
+```
