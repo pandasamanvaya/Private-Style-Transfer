@@ -8,3 +8,5 @@ This repo contains the implementation of the [Neural Style Transfer](https://arx
 * **Private Style Transfer.ipynb :-** The notebook containing details about privacy-preserving image style transfer.
 
 We have created a FHE-compatible style transfer model from a pre-trained model using Concrete-ML. Concrete-ML uses TFHE encryption scheme internally.
+
+Pre-processing and post-processing steps - 
